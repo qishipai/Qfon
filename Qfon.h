@@ -1,4 +1,4 @@
-/* 2022-10-07 by ÔÆÖÐÁú++ : v1.5 */
+/* 2022-10-13 by ÔÆÖÐÁú++ : v1.6 */
 
 #pragma once
 
@@ -44,11 +44,12 @@ static void fonFree(Qfon_ctx *c)
 }
 
 static byte fonDrawPix(Qfon_ctx *c,
-   byte *mat, ui16 mw, char const *str)
+  byte *mat, ui16 mw, char const *str)
 {
     ui16 sz = c->ch_cb * c->ch_ro;
     ui16 cw = c->ch_cb * 8;
-    byte c0, c1;  ui32 id;
+    ui32 dpt = mw - cw, id;
+    byte c0, c1;
 
     for (ui32 of = 0; *str; of += cw)
     {
@@ -85,20 +86,20 @@ static byte fonDrawPix(Qfon_ctx *c,
         }
 
         byte *p = c->data + id * sz;
-        ui16 ro = c->ch_ro, cb;
-        byte *u = mat + of, *d;
+        byte *pmt = mat + of;
+        ui16 chro = c->ch_ro;
 
-        for ( ; ro--; u += mw)
+        for ( ; chro--; pmt += dpt)
         {
-            cb = c->ch_cb, d = u;
+            ui16 ccb = c->ch_cb;
 
-            while (cb--)
+            for ( ; ccb--; pmt += 8)
             {
-                byte b = *p++, i = 128;
+                byte b = *p++, i = 8;
 
-                for ( ; i; i >>= 1)
+                for ( ; i; b >>= 1)
                 {
-                    *d++ = (b & i) > 0;
+                    pmt[--i] = b & 1;
                 }
             }
         }
@@ -107,38 +108,28 @@ static byte fonDrawPix(Qfon_ctx *c,
     return 0;
 }
 
-static byte fonShowChAscii(Qfon_ctx *c,
-     byte *buf, ui32 bw, char const *u,
-     char const *v, char const *str)
+static byte fonAscIIArt(Qfon_ctx *c,
+           ui32 cs, char const *u,
+     char const *v, char const *s)
 {
-    ui16 m = strlen(u), n = strlen(v);
-    ui32 matw = c->ch_cb * bw * 8;
-    ui16 r = 0;
+    ui16 r = c->ch_ro;
+    ui32 w = c->ch_cb * cs * 8; 
+    byte *b = calloc(w, r), *p;
 
-    if (fonDrawPix(c, buf, matw, str))
+    if (fonDrawPix(c, b, w, s))
     {
         return 1;
     }
 
-    while (1)
+    for (p = b; r--; puts(""))
     {
-        for (ui32 w = 0; w < matw; ++w)
+        for (ui32 i = w; i--; )
         {
-            if (*buf++)
-            {
-                fwrite(v, n, 1, stdout);
-            }
-            else
-            {
-                fwrite(u, m, 1, stdout);
-            }
-        }
-
-        putchar('\n');
-
-        if (++r == c->ch_ro)
-        {
-            return (fflush(stdout), 0);
+            fputs(*p++? v : u,
+                       stdout);
         }
     }
+
+    free(b);
+    return (fflush(stdout), 0);
 }
