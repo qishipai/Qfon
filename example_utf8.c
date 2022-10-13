@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "Qfon.h"
 
 #define UTF8_ONLY
@@ -9,9 +8,7 @@
 #include <iconv.h>
 #endif
 
-#define MAXW 4 // 最大单行字数
-
-byte scr[16 * 16 * MAXW];
+#define MAXW 5 // 最大单行字数
 
 int main()
 {
@@ -23,7 +20,7 @@ int main()
         return 1;
     }
 
-    char s[] = "我来！", g[35];
+    char s[] = "云中龙++", g[35];
 
 #ifdef UTF8_ONLY
     iconv_t ic;
@@ -37,7 +34,7 @@ int main()
     strcpy(g, s);
 #endif
 
-     fonShowChAscii(&fon, scr, MAXW,
+     fonShowChAscii(&fon, MAXW,
         "  " /* 0对应的字串 */,
         "#:" /* 1对应的字串 */, 
         g /*想显示的字串（字数<=MAXW）*/ );
